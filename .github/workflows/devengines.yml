@@ -8,11 +8,12 @@ jobs:
       fail-fast: false
       matrix:
         version: [v6.4.0, v7.0.0]
+        attempt: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         cache:
           - { name: default, pmc: true, cache: '' }
           - { name: pm-cache-off, pmc: false, cache: '' }
           - { name: cache-npm, pmc: true, cache: npm }
-    name: ${{ matrix.version }} / ${{ matrix.cache.name }}
+    name: ${{ matrix.version }} / ${{ matrix.cache.name }} / #${{ matrix.attempt }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -43,3 +44,9 @@ jobs:
           OUTCOME: ${{ steps.v6.outcome }}${{ steps.v7.outcome }}
         run: |
           echo "RESULT ${{ matrix.version }} / ${{ matrix.cache.name }} -> setup-node: ${OUTCOME/skipped/}; node $(node -v); npm: $(npm -v 2>&1 | tail -1)"
+
+      - name: Workaround check (npm config get cache --force in workspace)
+        if: always()
+        run: |
+          out=$(npm config get cache --force 2>/dev/null); code=$?
+          echo "FORCE ${{ matrix.version }} / ${{ matrix.cache.name }} -> exit $code, cache=$out"
